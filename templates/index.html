@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>AeroHackers Terms Summarizer v2.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { box-sizing: border-box; font-family: 'Roboto', sans-serif; }
+        body { background-color: #f0f4f8; color: #333; margin: 0; padding: 20px; line-height: 1.5; font-size: 16px; }
+        h2 { color: #1e90ff; text-align: center; margin-bottom: 20px; font-size: 2em; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); }
+        .container { max-width: 800px; margin: 0 auto; display: grid; gap: 20px; }
+        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+        .input-options { display: flex; flex-direction: column; gap: 15px; }
+        .input-group { display: flex; flex-direction: column; gap: 10px; }
+        input[type="file"], input[type="text"], textarea { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1em; }
+        textarea { min-height: 100px; resize: vertical; }
+        button { background-color: #1e90ff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
+        button:hover { background-color: #104e8b; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #1e90ff; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 10px auto; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #result { margin-top: 20px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+        h3 { font-size: 1.3em; color: #1e90ff; margin-bottom: 10px; }
+        p { margin: 8px 0; color: #555; }
+        p strong { color: #1e90ff; }
+        p em { color: #666; font-style: italic; }
+        .category-list { list-style-type: none; padding-left: 0; }
+        .category-list li { margin-bottom: 10px; background: #f9f9f9; padding: 10px; border-radius: 5px; border-left: 4px solid #1e90ff; }
+        .category-list li strong { color: #104e8b; }
+        @media (max-width: 600px) { .container { padding: 10px; } .card { padding: 15px; } }
+    </style>
+</head>
+<body>
+    <h2>AeroHackers Terms Summarizer v2.0</h2>
+    <div class="container">
+        <div class="card">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="input-options">
+                    <div class="input-group">
+                        <label><input type="radio" name="input_type" value="pdf" checked> Upload PDF</label>
+                        <input type="file" name="file" accept=".pdf">
+                    </div>
+                    <div class="input-group">
+                        <label><input type="radio" name="input_type" value="url"> Enter URL</label>
+                        <input type="text" name="url" placeholder="https://example.com/terms">
+                    </div>
+                    <div class="input-group">
+                        <label><input type="radio" name="input_type" value="text"> Paste Text</label>
+                        <textarea name="pasted_text" placeholder="Paste terms and conditions here..."></textarea>
+                    </div>
+                    <label>
+                        <input type="checkbox" name="ndpr"> NDPR Privacy Mode (extract NDPR terms)
+                    </label>
+                    <button type="submit">Summarize</button>
+                </div>
+            </form>
+        </div>
+        <div id="result"></div>
+    </div>
+    <script>
+        const form = document.getElementById('uploadForm');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            resultDiv.innerHTML = '<div>Loading...</div><div class="spinner"></div>';
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/summarize', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                let html = '';
+                if (response.ok) {
+                    if (data.summary) html += `<h3>Summary:</h3><p>${data.summary}</p>`;
+                    if (data.categories) {
+                        html += '<h4>NDPR Categories:</h4><ul class="category-list">';
+                        for (let [cat, sentences] of Object.entries(data.categories)) {
+                            html += `<li><strong>${cat.charAt(0).toUpperCase() + cat.slice(1)}:</strong> ${sentences.join('. ')}.</li>`;
+                        }
+                        html += '</ul>';
+                    }
+                    if (data.note) html += `<p><em>Note:</em> ${data.note}</p>`;
+                } else {
+                    html = `<p style="color:red;">Error: ${data.error}</p>`;
+                }
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color:red;">Client error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
