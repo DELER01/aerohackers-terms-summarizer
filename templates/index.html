@@ -1,67 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>AeroHackers Terms Summarizer v2.0</title>
+    <title>AeroHackers Terms Summarizer v2.1</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         * { box-sizing: border-box; font-family: 'Roboto', sans-serif; }
-        body { background-color: #f0f4f8; color: #333; margin: 0; padding: 20px; line-height: 1.5; font-size: 16px; }
-        h2 { color: #1e90ff; text-align: center; margin-bottom: 20px; font-size: 2em; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); }
-        .container { max-width: 800px; margin: 0 auto; display: grid; gap: 20px; }
-        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
-        .input-options { display: flex; flex-direction: column; gap: 15px; }
-        .input-group { display: flex; flex-direction: column; gap: 10px; }
-        input[type="file"], input[type="text"], textarea { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1em; }
-        textarea { min-height: 100px; resize: vertical; }
-        button { background-color: #1e90ff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
-        button:hover { background-color: #104e8b; }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #1e90ff; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 10px auto; display: inline-block; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #result { margin-top: 20px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
-        h3 { font-size: 1.3em; color: #1e90ff; margin-bottom: 10px; }
-        p { margin: 8px 0; color: #555; }
+        body { background: linear-gradient(135deg, #f0f4f8, #e6f0fa); color: #333; margin: 0; padding: 20px; line-height: 1.5; font-size: 16px; }
+        h2 { color: #1e90ff; text-align: center; margin-bottom: 20px; font-size: 2.5em; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); animation: fadeIn 1s ease-in; }
+        .container { max-width: 900px; margin: 0 auto; display: grid; gap: 25px; }
+        .card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); animation: slideIn 0.8s ease-out; position: relative; overflow: hidden; }
+        .nav-tabs { display: flex; justify-content: space-around; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
+        .nav-tab { padding: 10px 20px; cursor: pointer; font-weight: bold; color: #666; transition: color 0.3s, border-bottom 0.3s; }
+        .nav-tab.active { color: #1e90ff; border-bottom: 2px solid #1e90ff; }
+        .tab-content { display: none; animation: fadeInSlide 0.5s ease-out; }
+        .tab-content.active { display: block; }
+        .input-group { display: flex; flex-direction: column; gap: 12px; animation: fadeInUp 0.6s ease-out; }
+        input[type="file"], input[type="text"], textarea { padding: 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 1em; transition: border-color 0.3s; }
+        input[type="file"]:focus, input[type="text"]:focus, textarea:focus { border-color: #1e90ff; outline: none; }
+        textarea { min-height: 120px; resize: vertical; }
+        button { background-color: #1e90ff; color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; transition: background-color 0.3s, transform 0.2s; font-weight: bold; }
+        button:hover { background-color: #104e8b; transform: scale(1.05); }
+        .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #1e90ff; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 15px auto; display: inline-block; }
+        .loading-bar { width: 0; height: 6px; background: #28a745; position: absolute; bottom: 0; left: 0; transition: width 0.3s; border-radius: 0 0 12px 12px; }
+        #result { margin-top: 20px; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); animation: slideIn 0.8s ease-out; }
+        h3 { font-size: 1.4em; color: #1e90ff; margin-bottom: 12px; }
+        p { margin: 10px 0; color: #555; }
         p strong { color: #1e90ff; }
         p em { color: #666; font-style: italic; }
         .category-list { list-style-type: none; padding-left: 0; }
-        .category-list li { margin-bottom: 10px; background: #f9f9f9; padding: 10px; border-radius: 5px; border-left: 4px solid #1e90ff; }
+        .category-list li { margin-bottom: 12px; background: #f9f9f9; padding: 12px; border-radius: 6px; border-left: 5px solid #1e90ff; animation: fadeInUp 0.6s ease-out; transition: transform 0.2s; }
+        .category-list li:hover { transform: translateX(5px); }
         .category-list li strong { color: #104e8b; }
-        @media (max-width: 600px) { .container { padding: 10px; } .card { padding: 15px; } }
+        .share-btn { background-color: #28a745; margin-top: 15px; padding: 10px 20px; border-radius: 6px; transition: background-color 0.3s, transform 0.2s; }
+        .share-btn:hover { background-color: #218838; transform: scale(1.05); }
+        @media (max-width: 600px) { .container { padding: 10px; } .card { padding: 15px; } .nav-tabs { flex-direction: column; text-align: center; } .nav-tab { padding: 5px; } }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeInUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeInSlide { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <h2>AeroHackers Terms Summarizer v2.0</h2>
+    <h2>AeroHackers Terms Summarizer v2.1</h2>
     <div class="container">
         <div class="card">
             <form id="uploadForm" enctype="multipart/form-data">
-                <div class="input-options">
+                <div class="nav-tabs">
+                    <div class="nav-tab active" data-tab="pdf">PDF</div>
+                    <div class="nav-tab" data-tab="url">URL</div>
+                    <div class="nav-tab" data-tab="text">Text</div>
+                </div>
+                <div class="tab-content active" id="pdf-tab">
                     <div class="input-group">
                         <label><input type="radio" name="input_type" value="pdf" checked> Upload PDF</label>
                         <input type="file" name="file" accept=".pdf">
                     </div>
+                </div>
+                <div class="tab-content" id="url-tab">
                     <div class="input-group">
                         <label><input type="radio" name="input_type" value="url"> Enter URL</label>
                         <input type="text" name="url" placeholder="https://example.com/terms">
                     </div>
+                </div>
+                <div class="tab-content" id="text-tab">
                     <div class="input-group">
                         <label><input type="radio" name="input_type" value="text"> Paste Text</label>
                         <textarea name="pasted_text" placeholder="Paste terms and conditions here..."></textarea>
                     </div>
-                    <label>
-                        <input type="checkbox" name="ndpr"> NDPR Privacy Mode (extract NDPR terms)
-                    </label>
-                    <button type="submit">Summarize</button>
                 </div>
+                <label>
+                    <input type="checkbox" name="ndpr"> NDPR Privacy Mode (extract NDPR terms)
+                </label>
+                <button type="submit">Summarize</button>
+                <div class="loading-bar" id="loadingBar"></div>
             </form>
         </div>
-        <div id="result"></div>
+        <div id="result">
+            <button class="share-btn" id="shareBtn" style="display: none;">Share Results</button>
+        </div>
     </div>
     <script>
         const form = document.getElementById('uploadForm');
         const resultDiv = document.getElementById('result');
+        const loadingBar = document.getElementById('loadingBar');
+        const shareBtn = document.getElementById('shareBtn');
+        const tabs = document.querySelectorAll('.nav-tab');
+        const contents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                contents.forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+            });
+        });
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             resultDiv.innerHTML = '<div>Loading...</div><div class="spinner"></div>';
+            loadingBar.style.width = '0';
+            const startTime = Date.now();
             const formData = new FormData(form);
 
             try {
@@ -81,13 +123,21 @@
                         html += '</ul>';
                     }
                     if (data.note) html += `<p><em>Note:</em> ${data.note}</p>`;
+                    shareBtn.style.display = 'block';
                 } else {
                     html = `<p style="color:red;">Error: ${data.error}</p>`;
                 }
                 resultDiv.innerHTML = html;
+                const duration = (Date.now() - startTime) / 1000;
+                loadingBar.style.width = `${Math.min(duration * 20, 100)}%`;
             } catch (error) {
                 resultDiv.innerHTML = `<p style="color:red;">Client error: ${error.message}</p>`;
             }
+        });
+
+        shareBtn.addEventListener('click', () => {
+            const resultText = resultDiv.innerText;
+            navigator.clipboard.writeText(resultText).then(() => alert('Results copied to clipboard!'));
         });
     </script>
 </body>

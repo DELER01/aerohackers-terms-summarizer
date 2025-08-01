@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
 import os
 import asyncio
 import aiohttp
@@ -15,18 +14,17 @@ load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__, template_folder="templates")
-CORS(app)
 
 # Configure upload folder
 UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# Hugging Face API configuration
+# API configuration
 API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
 headers = {"Authorization": f"Bearer {os.getenv('HF_API_KEY')}"}
 
-# NDPR-specific keywords with categories
+# NDPR keywords
 ndpr_keywords = {
     "consent": ["consent", "rights"],
     "security": ["security", "delete"],
@@ -37,7 +35,7 @@ ndpr_keywords = {
 # In-memory cache
 cache = {}
 
-# Clean text by removing bracketed letters, scripts, and artifacts
+# Clean text function
 def clean_text(text):
     soup = BeautifulSoup(text, 'html.parser') if '<' in text else None
     if soup:
@@ -46,7 +44,7 @@ def clean_text(text):
         text = soup.get_text()
     return re.sub(r'\[\w\]|call\(this\);', '', text).strip()
 
-# Split text into chunks (approx. 2000 characters)
+# Split text into chunks
 def split_into_chunks(text, max_chars=2000):
     sentences = re.split(r'(?<=[.!?])\s+', text)
     chunks = []
@@ -61,7 +59,7 @@ def split_into_chunks(text, max_chars=2000):
         chunks.append(current_chunk.strip())
     return chunks[:3] if len(chunks) > 2 else chunks
 
-# Filter and categorize NDPR sentences
+# Filter NDPR sentences
 def filter_ndpr_sentences(text, keywords):
     sentences = text.split('.')
     categorized = defaultdict(list)
@@ -74,7 +72,7 @@ def filter_ndpr_sentences(text, keywords):
                     break
     return categorized
 
-# Asynchronous summarize text with retry
+# Summarize text asynchronously
 async def summarize_text(session, text, max_length=15):
     cache_key = hash(text)
     if cache_key in cache:
@@ -92,7 +90,7 @@ async def summarize_text(session, text, max_length=15):
             await asyncio.sleep(2 ** attempt)
     return "API error: Max retries exceeded"
 
-# Fetch text from URL
+# Fetch content from URL
 def fetch_url_content(url):
     try:
         response = requests.get(url, timeout=10)
@@ -169,4 +167,5 @@ def home():
     return render_template('index.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
